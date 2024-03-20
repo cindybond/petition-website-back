@@ -2,8 +2,10 @@ import {Request, Response} from "express";
 import Logger from '../../config/logger';
 
 const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
+    Logger.info('GET all petitions')
     try{
         // Your code goes here
+
         res.statusMessage = "Not Implemented Yet!";
         res.status(501).send();
         return;

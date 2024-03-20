@@ -1,0 +1,42 @@
+import { getPool } from '../../config/db';
+import Logger from '../../config/logger';
+import { ResultSetHeader } from 'mysql2'
+
+const insert = async (firstName: string, lastName: string, email: string, password: string): Promise<ResultSetHeader> => {
+    Logger.info(`Adding user ${firstName} to the database`);
+    const conn = await getPool().getConnection();
+    const query = 'insert into user (first_name, last_name, email, password) values ( ?, ?, ?, ? )';
+    const [ result ] = await conn.query( query, [ firstName, lastName, email, password ]);
+    await conn.release();
+    return result;
+};
+
+const getUser = async (id:string): Promise<ResultSetHeader> => {
+    Logger.info('Getting the user details from the database');
+    const conn = await getPool().getConnection();
+    const query = 'select * from users where id = ? ';
+    const [ rows ] = await conn.query( query , [ id ]);
+    await conn.release();
+    return rows;
+};
+
+const userLogout = async (token: string | string[]): Promise<any> => {
+    Logger.info('Logging out current user');
+    const conn = await getPool().getConnection();
+    const query = 'select id from user where auth_token = ?';
+    const [ result ] = await conn.query( query, [ token ]);
+    await conn.release();
+    return result;
+}
+
+const userLogin = async(email: string, password: string) : Promise<any> => {
+    Logger.info('Logging in an user');
+    const conn = await getPool().getConnection();
+    const query = 'select id from user where email = ? and password = ?';
+    const [ result ] = await conn.query( query, [ email, password ]);
+    await conn.release();
+    return result;
+}
+
+
+export{ insert, getUser, userLogout, userLogin }
