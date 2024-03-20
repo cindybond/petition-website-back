@@ -10,7 +10,7 @@ const register = async (req: Request, res: Response): Promise<void> => {
     const lastName = req.body.lastName;
     const email = req.body.email;
     const password = req.body.password;
-
+    const checkResult = await users.getUser(email);
 
     const validation = await validate(
         schemas.user_register,
@@ -21,16 +21,20 @@ const register = async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
-    try{
-        const result = await users.insert(firstName, lastName, email, password);
-        res.status(201).send({ "user_id": result.insertId });
-        return;
-    } catch (err) {
-        Logger.error(err);
-        res.statusMessage = "Internal Server Error";
-        res.status(500).send();
-        return;
+    if (checkResult.length !== 0) {
+        res.status(403).send('Forbidden');
+    } else {
+        try{
+            const result = await users.insert(firstName, lastName, email, password);
+            res.status(201).send({ "userId": result.insertId });
+            return;
+        } catch (err) {
+            res.statusMessage = "Internal Server Error";
+            res.status(500).send();
+            return;
+        }
     }
+
 }
 
 const login = async (req: Request, res: Response): Promise<void> => {
