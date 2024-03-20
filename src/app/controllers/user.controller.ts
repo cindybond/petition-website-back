@@ -39,19 +39,35 @@ const register = async (req: Request, res: Response): Promise<void> => {
 
 const login = async (req: Request, res: Response): Promise<void> => {
     Logger.http('POST request to login a user');
-    const email = req.params.email;
-    const password = req.params.password;
-    try{
-        // Your code goes here
-        const result = await users.userLogin(email, password);
-        res.status(201).send('User logged in');
+    const email = req.body.email;
+    const password = req.body.password;
+    const checkPassword = await users.getUser(email);
 
-    } catch (err) {
-        Logger.error(err);
-        res.statusMessage = "Internal Server Error";
-        res.status(500).send();
-
+    const validation = await validate(
+        schemas.user_login,
+        req.body);
+    if (validation !== true) {
+        res.statusMessage= `Bad Request: ${validation.toString()}`;
+        res.status(400).send();
+        return;
     }
+
+    if (checkPassword[0].password !== password ) {
+        res.status(401).send('Error:Invalid password')
+    } else {
+        try{
+            const result = await users.userLogin(email, password);
+            const token = req.headers['postman-token'];
+            res.status(200).send({"token": token, "userId": result[0].id});
+
+        } catch (err) {
+            Logger.error(err);
+            res.statusMessage = "Internal Server Error";
+            res.status(500).send();
+
+        }
+    }
+
 }
 
 const logout = async (req: Request, res: Response): Promise<void> => {
