@@ -11,6 +11,14 @@ const insert = async (firstName: string, lastName: string, email: string, passwo
     return result;
 };
 
+const insertToken = async (token: string, email: string): Promise<any> => {
+    Logger.info(`Storing token`);
+    const conn = await getPool().getConnection();
+    const query = 'update user set auth_token = ? where email = ?';
+    const [ result ] = await conn.query( query, [ token, email ]);
+    await conn.release();
+    return result;
+};
 const getUser = async (email:string): Promise<any> => {
     Logger.info('Getting the user details from the database');
     const conn = await getPool().getConnection();
@@ -48,4 +56,4 @@ const userLogout = async (token: string | string[]): Promise<any> => {
 
 
 
-export{ insert, getUser, getUserId, userLogout, userLogin }
+export{ insert, insertToken, getUser, getUserId, userLogout, userLogin }

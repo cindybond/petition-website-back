@@ -5,6 +5,7 @@ import * as schemas from '../resources/schemas.json';
 import validate from '../services/validator';
 import * as passwords from '../services/passwords';
 import { uid } from 'rand-token';
+import jwt from 'jwt-simple';
 
 
 const register = async (req: Request, res: Response): Promise<void> => {
@@ -45,9 +46,9 @@ const login = async (req: Request, res: Response): Promise<void> => {
     const email = req.body.email;
     const password = await passwords.hash(req.body.password);
     const checkPassword = await users.getUser(email);
-    Logger.http(checkPassword)
     const comparePassword = await passwords.compare(req.body.password, checkPassword[0].password);
     const token = uid(16);
+    const storeToken = await users.insertToken(token, email);
 
     const validation = await validate(
         schemas.user_login,
@@ -105,6 +106,8 @@ const view = async (req: Request, res: Response): Promise<void> => {
     const userDetails = await users.getUserId(id);
     Logger.http(token)
     Logger.http(userDetails)
+
+
     if (token !== userDetails[0].auth_token) {
         res.status(200).send({"firstName": userDetails[0].first_name, "lastName": userDetails[0].last_name});
     } else {
@@ -126,6 +129,8 @@ const update = async (req: Request, res: Response): Promise<void> => {
     Logger.http('PATCH request to change user details');
     const id = parseInt(req.params.id, 10);
     const token = req.headers['x-authorization'];
+    const currentPassword = req.body.currentPassword;
+    const password = req.body.password;
 
     if (Number.isNaN(id)) {
         res.status(400).send('Bad request. Invalid information.');
@@ -141,14 +146,16 @@ const update = async (req: Request, res: Response): Promise<void> => {
     }
 
     const userDetails = await users.getUserId(id);
-    Logger.http(token);
     Logger.http(userDetails);
     if (token !== userDetails[0].auth_token) {
         res.status(401).send('Error: Unauthorized');
         return;
     }
 
-    // if ()
+    if (currentPassword === password) {
+        res.status(403).send('Forbidden');
+    }
+
     try{
         res.status(200).send();
         return;
