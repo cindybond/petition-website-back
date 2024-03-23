@@ -1,11 +1,19 @@
+import logger from '../../config/logger';
+import bcrypt from 'bcrypt';
+
 const hash = async (password: string): Promise<string> => {
-    // Todo: update this to encrypt the password
-    return password
+    password = await bcrypt.hash(password, 10);
+    return password;
 }
 
 const compare = async (password: string, comp: string): Promise<boolean> => {
-    // Todo: (suggested) update this to compare the encrypted passwords
-    return (password === comp)
+    const passwordMatch = await bcrypt.compare(password, comp);
+    if (passwordMatch) {
+        logger.info('Password match')
+    } else {
+        logger.info('Password do not match')
+    }
+    return passwordMatch;
 }
 
 export {hash, compare}

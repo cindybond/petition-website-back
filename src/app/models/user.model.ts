@@ -20,15 +20,14 @@ const getUser = async (email:string): Promise<any> => {
     return result;
 };
 
-const userLogout = async (token: string | string[]): Promise<any> => {
-    Logger.info('Logging out current user');
+const getUserId = async (id:number): Promise<any> => {
+    Logger.info('Getting the user details from the database');
     const conn = await getPool().getConnection();
-    const query = 'select id from user where auth_token = ?';
-    const [ result ] = await conn.query( query, [ token ]);
+    const query = 'select * from user where id = ? ';
+    const [ result ] = await conn.query( query , [ id ]);
     await conn.release();
     return result;
-}
-
+};
 const userLogin = async(email: string, password: string) : Promise<any> => {
     Logger.info('Logging in an user');
     const conn = await getPool().getConnection();
@@ -38,5 +37,15 @@ const userLogin = async(email: string, password: string) : Promise<any> => {
     return result;
 }
 
+const userLogout = async (token: string | string[]): Promise<any> => {
+    Logger.info('Logging out current user');
+    const conn = await getPool().getConnection();
+    const query = 'select id from user where auth_token = ?';
+    const [ result ] = await conn.query( query, [ token ]);
+    await conn.release();
+    return result;
+}
 
-export{ insert, getUser, userLogout, userLogin }
+
+
+export{ insert, getUser, getUserId, userLogout, userLogin }
