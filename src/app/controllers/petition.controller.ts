@@ -8,13 +8,27 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
     const count = parseInt(req.query.count as string,10);
     const q = (req.query.q as string);
     const categoryIds = req.query.categoryIds;
-    const supportingCost = req.query.supportingCost;
+    let supportingCost = parseInt(req.query.supportingCost as string,10);
     const ownerId = req.query.ownerId;
     const supporterId = req.query.supporterId;
     let endIndex = startIndex + count;
+    let searchTerm = null;
+
+    if (q === '') {
+        res.status(400).send('Bad request');
+        return;
+    }
+    if (q !== undefined)  {
+        searchTerm = `%${q}%`;
+    }
+
+    if (Number.isNaN(supportingCost)) {
+        supportingCost = null;
+    }
+
 
     try{
-        const result = await petition.viewAllPetitions(q);
+        const result = await petition.viewAllPetitions(searchTerm, supportingCost);
         if (Number.isNaN(startIndex)) {
             startIndex = 0;
             endIndex = result.length;
