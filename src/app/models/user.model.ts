@@ -1,6 +1,6 @@
 import { getPool } from '../../config/db';
 import Logger from '../../config/logger';
-import { ResultSetHeader } from 'mysql2'
+import { ResultSetHeader } from 'mysql2';
 
 const insert = async (firstName: string, lastName: string, email: string, password: string): Promise<any> => {
     Logger.info(`Adding user ${firstName} to the database`);
