@@ -17,7 +17,7 @@ const viewPetition = async (id:number): Promise<any> => {
     Logger.info(`Retrieving petition with matching id`);
     const conn = await getPool().getConnection();
     const query = 'select * from petition where id = ?';
-    const [ result ] = await conn.query( query, [ id]);
+    const [ result ] = await conn.query( query, [ id ]);
     await conn.release();
     return result;
 };
@@ -31,14 +31,40 @@ const getCategory = async (): Promise<any> => {
     return result;
 };
 
-const addPetition = async (title: string, description:string): Promise<any> => {
+const addPetition = async (title: string, description:string, ownerId: number, categoryId:number): Promise<any> => {
     Logger.info(`Adding a petition`);
     const conn = await getPool().getConnection();
-    const query = 'insert into petition ( title , description, creation_date ) values (?, ?)';
-    const [ result ] = await conn.query( query, [ title, description ]);
+    const query = 'insert into petition ( title , description, creation_date, image_filename, owner_id, category_id ) values (?, ?, SYSDATE(), null, ?, ? )';
+    const [ result ] = await conn.query( query, [ title, description, ownerId, categoryId ]);
     await conn.release();
     return result;
 };
 
+const editPetition = async (title: string, description:string, ownerId: number, categoryId:number): Promise<any> => {
+    Logger.info(`Editing a petition`);
+    const conn = await getPool().getConnection();
+    const query = 'insert into petition ( title , description, creation_date, image_filename, owner_id, category_id ) values (?, ?, SYSDATE(), null, ?, ? )';
+    const [ result ] = await conn.query( query, [ title, description, ownerId, categoryId ]);
+    await conn.release();
+    return result;
+};
 
-export { viewAllPetitions, viewPetition, getCategory, addPetition }
+const removePetition = async (petitionId:number): Promise<any> => {
+    Logger.info(`Deleting a petition`);
+    const conn = await getPool().getConnection();
+    const query = 'delete from petition where id = ? ';
+    const [ result ] = await conn.query( query, [ petitionId ]);
+    await conn.release();
+    return result;
+};
+
+const viewSupporters = async (petitionId:number): Promise<any> => {
+    Logger.info(`Retrieving all supporters of petition with matching id`);
+    const conn = await getPool().getConnection();
+    const query = 'select S.id as supportId, S.support_tier_id as supportTierId, message, S.user_id as supporterId, U.first_name as supporterFirstName, U.last_name as supporterLastName, timestamp from supporter as S join user as U on S.user_id =  U.id WHERE petition_id = ? ORDER BY timestamp desc';
+    const [ result ] = await conn.query( query, [ petitionId ]);
+    await conn.release();
+    return result;
+};
+
+export { viewAllPetitions, viewPetition, getCategory, addPetition, editPetition, removePetition, viewSupporters }

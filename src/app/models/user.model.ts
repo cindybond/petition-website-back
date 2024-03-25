@@ -63,6 +63,15 @@ const userLogout = async (token: string | string[]): Promise<any> => {
     return result;
 }
 
+const updateUser = async (password:string , id:number): Promise<any> => {
+    Logger.info(`Storing token`);
+    const conn = await getPool().getConnection();
+    const query = 'update user set password = ? where id = ?';
+    const [ result ] = await conn.query( query, [ password, id ]);
+    await conn.release();
+    return result;
+};
 
 
-export{ insert, insertToken, getUser, getUserId, userByToken, userLogout, userLogin }
+
+export{ insert, insertToken, getUser, getUserId, userByToken, userLogout, userLogin, updateUser }

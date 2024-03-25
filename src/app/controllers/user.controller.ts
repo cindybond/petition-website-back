@@ -107,7 +107,6 @@ const view = async (req: Request, res: Response): Promise<void> => {
     Logger.http(token)
     Logger.http(userDetails)
 
-
     if (token !== userDetails[0].auth_token) {
         res.status(200).send({"firstName": userDetails[0].first_name, "lastName": userDetails[0].last_name});
     } else {
@@ -157,6 +156,8 @@ const update = async (req: Request, res: Response): Promise<void> => {
     }
 
     try{
+        const hashedPassword = await passwords.hash(req.body.password);
+        const result = await users.updateUser(hashedPassword, id)
         res.status(200).send();
         return;
     } catch (err) {

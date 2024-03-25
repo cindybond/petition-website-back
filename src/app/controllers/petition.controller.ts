@@ -94,7 +94,10 @@ const getPetition = async (req: Request, res: Response): Promise<void> => {
 const addPetition = async (req: Request, res: Response): Promise<void> => {
     const title = req.body.title;
     const description = req.body.description;
+    const categoryId = req.body.categoryId;
+
     const token = req.headers['x-authorization'] as string;
+
     if (token === undefined) {
         res.status(401).send('Unauthorized user')
         return;
@@ -105,6 +108,7 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
         res.status(401).send('Unauthorized user')
         return;
     }
+    const ownerId = userDetails[0].id;
 
     const validation = await validate(
         schemas.petition_post,
@@ -115,8 +119,8 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
     }
 
     try{
-        const result = await petition.addPetition(title, description);
-        res.status(201).send();
+        const result = await petition.addPetition(title, description, ownerId, categoryId);
+        res.status(201).send({"petitionId":result.insertId});
         return;
     } catch (err) {
         Logger.error(err);
@@ -127,10 +131,46 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
 }
 
 const editPetition = async (req: Request, res: Response): Promise<void> => {
+    const petitionId = parseInt(req.params.id, 10);
+    const token = req.headers['x-authorization'] as string;
+    const title = req.body.title;
+    const description = req.body.description;
+    const categoryId = req.body.categoryId;
+
+    const userDetails = await users.userByToken(token);
+    if (token !== userDetails[0].auth_token) {
+        res.status(403).send('Forbidden')
+        return;
+    }
+
+    const ownerId = userDetails[0].id;
+    const validation = await validate(
+        schemas.petition_patch,
+        req.body);
+    if (validation !== true) {
+        res.status(400).send('Bad request.');
+        return;
+    }
+
+    if(Number.isNaN(petitionId)) {
+        res.status(400).send('Bad request')
+        return;
+    }
+
+    const checkPetition = await petition.viewPetition(petitionId);
+    if (checkPetition.length === 0 ) {
+        res.status(404).send('Not Found. No petition with id')
+        return;
+    }
+    Logger.info(checkPetition)
+    if (checkPetition[0].owner_id !== ownerId) {
+        res.status(403).send('Forbidden')
+        return;
+    }
+
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
+        const result = await petition.editPetition(title, description, ownerId, categoryId)
+        res.status(200).send();
         return;
     } catch (err) {
         Logger.error(err);
@@ -141,10 +181,21 @@ const editPetition = async (req: Request, res: Response): Promise<void> => {
 }
 
 const deletePetition = async (req: Request, res: Response): Promise<void> => {
+    const petitionId = parseInt(req.params.id, 10);
+    const token = req.headers['x-authorization'] as string;
+    const userDetails = await users.userByToken(token);
+    if (token !== userDetails[0].auth_token) {
+        res.status(403).send('Forbidden')
+        return;
+    }
+    const checkPetition = await petition.viewPetition(petitionId);
+    if (checkPetition.length === 0 ) {
+        res.status(404).send('Not Found')
+        return;
+    }
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
+        const result = await petition.removePetition(petitionId)
+        res.status(200).send();
         return;
     } catch (err) {
         Logger.error(err);
