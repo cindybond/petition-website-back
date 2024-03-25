@@ -1,18 +1,25 @@
 import {Request, Response} from "express";
 import Logger from '../../config/logger';
 import * as petition from '../models/petition.model';
+import * as users from  '../models/user.model';
+import {getCategory} from "../models/petition.model";
+import validate from "../services/validator";
+import * as schemas from "../resources/schemas.json";
+
 
 const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
     Logger.info('GET all petitions')
     let startIndex = parseInt(req.query.startIndex as string,10);
     const count = parseInt(req.query.count as string,10);
-    const q = (req.query.q as string);
-    const categoryIds = req.query.categoryIds;
+    const q = req.query.q as string;
+    const categoryIds = req.query.categoryIds as string[];
     let supportingCost = parseInt(req.query.supportingCost as string,10);
-    const ownerId = req.query.ownerId;
-    const supporterId = req.query.supporterId;
+    let ownerId = parseInt(req.query.ownerId as string, 10);
+    let supporterId = parseInt(req.query.supporterId as string, 10);
+    const sortBy = req.query.sortBy as string;
     let endIndex = startIndex + count;
     let searchTerm = null;
+    let sortTerm;
 
     if (q === '') {
         res.status(400).send('Bad request');
@@ -25,10 +32,31 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
     if (Number.isNaN(supportingCost)) {
         supportingCost = null;
     }
-
+    if (Number.isNaN(supporterId)) {
+        supporterId = null;
+    }
+    if (Number.isNaN(ownerId)) {
+        ownerId = null;
+    }
+    if (sortBy === 'ALPHABETICAL_ASC') {
+        sortTerm = 'ORDER BY P.title ASC'
+    } else if (sortBy === 'ALPHABETICAL_DESC') {
+        sortTerm = 'ORDER BY P.title DESC'
+    } else if (sortBy === 'COST_ASC') {
+        sortTerm =  'ORDER BY T.cost ASC'
+    } else if (sortBy === 'COST_DESC') {
+        sortTerm = 'ORDER BY T.cost DESC'
+    } else if (sortBy === 'CREATED_DESC') {
+        sortTerm = 'ORDER BY P.creation_date DESC'
+    } else if (sortBy === undefined) {
+        sortTerm = 'ORDER BY P.creation_date asc'
+    } else {
+        res.status(400).send('Bad Request');
+        return;
+    }
 
     try{
-        const result = await petition.viewAllPetitions(searchTerm, supportingCost);
+        const result = await petition.viewAllPetitions(searchTerm, supportingCost, supporterId, ownerId, sortTerm);
         if (Number.isNaN(startIndex)) {
             startIndex = 0;
             endIndex = result.length;
@@ -43,12 +71,17 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
     }
 }
 
-
 const getPetition = async (req: Request, res: Response): Promise<void> => {
+    const id = parseInt(req.params.id,10);
+    const result = await petition.viewPetition(id);
+
+    if (result.length === 0){
+        res.status(404).send('Not Found')
+        return;
+    }
+
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
+        res.status(200).send('OK');
         return;
     } catch (err) {
         Logger.error(err);
@@ -59,10 +92,31 @@ const getPetition = async (req: Request, res: Response): Promise<void> => {
 }
 
 const addPetition = async (req: Request, res: Response): Promise<void> => {
+    const title = req.body.title;
+    const description = req.body.description;
+    const token = req.headers['x-authorization'] as string;
+    if (token === undefined) {
+        res.status(401).send('Unauthorized user')
+        return;
+    }
+    const userDetails = await users.userByToken(token);
+    Logger.info(userDetails)
+    if (token !== userDetails[0].auth_token) {
+        res.status(401).send('Unauthorized user')
+        return;
+    }
+
+    const validation = await validate(
+        schemas.petition_post,
+        req.body);
+    if (validation !== true) {
+        res.status(400).send('Bad request.');
+        return;
+    }
+
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
+        const result = await petition.addPetition(title, description);
+        res.status(201).send();
         return;
     } catch (err) {
         Logger.error(err);
@@ -101,10 +155,10 @@ const deletePetition = async (req: Request, res: Response): Promise<void> => {
 }
 
 const getCategories = async(req: Request, res: Response): Promise<void> => {
+    const result = await petition.getCategory();
+    Logger.info(result)
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
+        res.status(200).send(result);
         return;
     } catch (err) {
         Logger.error(err);
@@ -114,4 +168,4 @@ const getCategories = async(req: Request, res: Response): Promise<void> => {
     }
 }
 
-export {getAllPetitions, getPetition, addPetition, editPetition, deletePetition, getCategories};
+export { getAllPetitions, getPetition, addPetition, editPetition, deletePetition, getCategories }
