@@ -40,11 +40,11 @@ const addPetition = async (title: string, description:string, ownerId: number, c
     return result;
 };
 
-const editPetition = async (title: string, description:string, ownerId: number, categoryId:number): Promise<any> => {
+const editPetition = async (title: string, description:string, ownerId: number, categoryId:number, petitionId:number): Promise<any> => {
     Logger.info(`Editing a petition`);
     const conn = await getPool().getConnection();
-    const query = 'insert into petition ( title , description, creation_date, image_filename, owner_id, category_id ) values (?, ?, SYSDATE(), null, ?, ? )';
-    const [ result ] = await conn.query( query, [ title, description, ownerId, categoryId ]);
+    const query = 'update petition set title = ?, description = ?, creation_date = SYSDATE() , image_filename = null , owner_id = ?, category_id = ? where id = ?';
+    const [ result ] = await conn.query( query, [ title, description, ownerId, categoryId, petitionId ]);
     await conn.release();
     return result;
 };

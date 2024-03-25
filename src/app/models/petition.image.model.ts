@@ -10,4 +10,13 @@ const getPhoto = async (petitionId:number): Promise<any> => {
     return result;
 }
 
-export { getPhoto }
+const setPhoto = async (petitionId:number, filename:string, fileType:string): Promise<any> => {
+    Logger.info('Setting the petition image file to the database');
+    const conn = await getPool().getConnection();
+    const query = 'update petition set image_filename = ? where id = ? ';
+    const [ result ] = await conn.query( query , [ `${filename}.${fileType}`, petitionId ]);
+    await conn.release();
+    return result;
+}
+
+export { getPhoto, setPhoto }

@@ -45,9 +45,9 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
     } else if (sortBy === 'COST_ASC') {
         sortTerm =  'ORDER BY T.cost ASC'
     } else if (sortBy === 'COST_DESC') {
-        sortTerm = 'ORDER BY T.cost DESC'
+        sortTerm = 'ORDER BY T.cost desc'
     } else if (sortBy === 'CREATED_DESC') {
-        sortTerm = 'ORDER BY P.creation_date DESC'
+        sortTerm = 'ORDER BY P.creation_date desc'
     } else if (sortBy === undefined) {
         sortTerm = 'ORDER BY P.creation_date asc'
     } else {
@@ -169,7 +169,7 @@ const editPetition = async (req: Request, res: Response): Promise<void> => {
     }
 
     try{
-        const result = await petition.editPetition(title, description, ownerId, categoryId)
+        const result = await petition.editPetition(title, description, ownerId, categoryId, petitionId)
         res.status(200).send();
         return;
     } catch (err) {
