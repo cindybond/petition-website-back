@@ -1,11 +1,45 @@
 import {Request, Response} from "express";
 import Logger from "../../config/logger";
+import * as petition from '../models/petition.model';
+import * as users from  '../models/user.model';
+import validate from "../services/validator";
+import * as schemas from "../resources/schemas.json";
 
 const addSupportTier = async (req: Request, res: Response): Promise<void> => {
+    const title = req.body.title;
+    const description = req.body.description;
+    const cost = req.body.cost;
+    const petitionId = parseInt(req.params.id,10);
+    const token = req.headers['x-authorization'] as string;
+
+    if(Number.isNaN(petitionId)) {
+        res.status(400).send('Bad request')
+        return;
+    }
+    const userDetails = await users.userByToken(token);
+    if (token !== userDetails[0].auth_token) {
+        res.status(401).send('Unauthorized')
+        return;
+    }
+
+    const checkPetition = await petition.viewPetition(petitionId);
+    if (checkPetition.length === 0 ) {
+        res.status(404).send('Not Found. No petition found with id')
+        return;
+    }
+
+    const validation = await validate(
+        schemas.support_tier_post,
+        req.body);
+    if (validation !== true) {
+        res.status(400).send('Bad request.');
+        return;
+    }
+
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
+        const result = await petition.addSupportTier(petitionId, title, description, cost);
+        Logger.info(result)
+        res.status(201).send({"post_petition_support_tier_id": result.insertId});
         return;
     } catch (err) {
         Logger.error(err);
@@ -16,10 +50,41 @@ const addSupportTier = async (req: Request, res: Response): Promise<void> => {
 }
 
 const editSupportTier = async (req: Request, res: Response): Promise<void> => {
+    const petitionId = parseInt(req.params.id,10);
+    const supportTierId = parseInt(req.params.tierId, 10);
+    const title = req.body.title;
+    const description = req.body.description;
+    const cost = req.body.cost;
+    const token = req.headers['x-authorization'] as string;
+
+    if(Number.isNaN(petitionId)) {
+        res.status(400).send('Bad request')
+        return;
+    }
+    const userDetails = await users.userByToken(token);
+    if (token !== userDetails[0].auth_token) {
+        res.status(401).send('Unauthorized')
+        return;
+    }
+
+    const checkPetition = await petition.viewPetition(petitionId);
+    if (checkPetition.length === 0 ) {
+        res.status(404).send('Not Found. No petition found with id')
+        return;
+    }
+
+    const validation = await validate(
+        schemas.support_tier_post,
+        req.body);
+    if (validation !== true) {
+        res.status(400).send('Bad request.');
+        return;
+    }
+
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
+        const updateSupportTier = await petition.updateSupportTier(title, description, cost, petitionId)
+        Logger.info(editSupportTier)
+        res.status(200).send();
         return;
     } catch (err) {
         Logger.error(err);
@@ -31,9 +96,8 @@ const editSupportTier = async (req: Request, res: Response): Promise<void> => {
 
 const deleteSupportTier = async (req: Request, res: Response): Promise<void> => {
     try{
-        // Your code goes here
-        res.statusMessage = "Not Implemented Yet!";
-        res.status(501).send();
+
+        res.status(200).send();
         return;
     } catch (err) {
         Logger.error(err);

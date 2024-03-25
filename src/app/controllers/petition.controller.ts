@@ -79,9 +79,9 @@ const getPetition = async (req: Request, res: Response): Promise<void> => {
         res.status(404).send('Not Found')
         return;
     }
-
+    Logger.info(result)
     try{
-        res.status(200).send('OK');
+        res.status(200).send();
         return;
     } catch (err) {
         Logger.error(err);

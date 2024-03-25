@@ -16,7 +16,7 @@ const viewAllPetitions = async(searchTerm:string, supportingCost:number, support
 const viewPetition = async (id:number): Promise<any> => {
     Logger.info(`Retrieving petition with matching id`);
     const conn = await getPool().getConnection();
-    const query = 'select * from petition where id = ?';
+    const query = 'SELECT P.id as petitionId, P.title as title, P.category_id as categoryId, P.owner_id as ownerId, U.first_name as ownerFirstName, U.last_name as ownerLastName, FROM petition as P join user as U on P.owner_id = U.id join supporter as S on P.id = S.petition_id';
     const [ result ] = await conn.query( query, [ id ]);
     await conn.release();
     return result;
@@ -67,4 +67,31 @@ const viewSupporters = async (petitionId:number): Promise<any> => {
     return result;
 };
 
-export { viewAllPetitions, viewPetition, getCategory, addPetition, editPetition, removePetition, viewSupporters }
+const addSupporter = async (petitionId:number, supportTierId:number, userId:number, message:string): Promise<any> => {
+    Logger.info(`Adding a supporter`);
+    const conn = await getPool().getConnection();
+    const query = 'insert into supporter ( petition_id, support_tier_id, user_id, message, timestamp ) values ( ?, ?, ?, ?, SYSDATE())';
+    const [ result ] = await conn.query( query, [ petitionId, supportTierId, userId, message ]);
+    await conn.release();
+    return result;
+};
+
+const addSupportTier = async (petitionId:number, title:string, description:string, cost:number): Promise<any> => {
+    Logger.info(`Adding a support tier`);
+    const conn = await getPool().getConnection();
+    const query = 'insert into support_tier ( petition_id, title, description, cost  ) values ( ?, ?, ?, ?)';
+    const [ result ] = await conn.query( query, [ petitionId, title, description, cost ]);
+    await conn.release();
+    return result;
+};
+
+const updateSupportTier = async (title:string, description:string, cost:number, petitionId:number): Promise<any> => {
+    Logger.info(`Editing a petition`);
+    const conn = await getPool().getConnection();
+    const query = 'update support_tier set title = ?, description = ?, cost = ? where petition_id = ?';
+    const [ result ] = await conn.query( query, [ title, description, cost, petitionId ]);
+    await conn.release();
+    return result;
+};
+
+export { viewAllPetitions, viewPetition, getCategory, addPetition, editPetition, removePetition, viewSupporters, addSupporter, addSupportTier, updateSupportTier }
