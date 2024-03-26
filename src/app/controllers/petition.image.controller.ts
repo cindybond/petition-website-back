@@ -9,7 +9,7 @@ import * as users from "../models/user.model";
 const getImage = async (req: Request, res: Response): Promise<void> => {
     const petitionId = parseInt(req.params.id, 10);
 
-    const checkId = await petition.viewPetition(petitionId);
+    const checkId = await petition.petitionDetails(petitionId);
     if (checkId.length === 0) {
         res.status(404).send('Not Found. No petition with id or Petition has no image')
         return;
@@ -71,7 +71,7 @@ const setImage = async (req: Request, res: Response): Promise<void> => {
     const filename = `petition_${petitionId}`;
     const fileType = contentType.split('/')[1];
     const filePath = path.join(__dirname, '..' , '..', '..', 'storage', 'images', `${filename}.${fileType}`)
-    const petitionDetails = await petition.viewPetition(petitionId);
+    const petitionDetails = await petition.petitionDetails(petitionId);
 
     if (petitionDetails[0].image_filename === null) {
         fs.writeFileSync(filePath, body, 'binary');

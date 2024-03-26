@@ -7,6 +7,7 @@ import validate from "../services/validator";
 import * as schemas from "../resources/schemas.json";
 
 
+
 const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
     Logger.info('GET all petitions')
     let startIndex = parseInt(req.query.startIndex as string,10);
@@ -72,16 +73,19 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
 }
 
 const getPetition = async (req: Request, res: Response): Promise<void> => {
-    const id = parseInt(req.params.id,10);
-    const result = await petition.viewPetition(id);
+    const petitionId = parseInt(req.params.id,10);
+    const check = await petition.petitionDetails(petitionId);
 
-    if (result.length === 0){
+    if (check.length === 0){
         res.status(404).send('Not Found')
         return;
     }
-    Logger.info(result)
+
     try{
-        res.status(200).send();
+        const result = await petition.viewPetition(petitionId)
+        const supportTierResult = await petition.getSupportTier(petitionId)
+        result[0].supportTiers = supportTierResult
+        res.status(200).send(result);
         return;
     } catch (err) {
         Logger.error(err);
@@ -103,7 +107,7 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
         return;
     }
     const userDetails = await users.userByToken(token);
-    Logger.info(userDetails)
+
     if (token !== userDetails[0].auth_token) {
         res.status(401).send('Unauthorized user')
         return;
@@ -157,7 +161,7 @@ const editPetition = async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
-    const checkPetition = await petition.viewPetition(petitionId);
+    const checkPetition = await petition.petitionDetails(petitionId);
     if (checkPetition.length === 0 ) {
         res.status(404).send('Not Found. No petition with id')
         return;
@@ -184,15 +188,23 @@ const deletePetition = async (req: Request, res: Response): Promise<void> => {
     const petitionId = parseInt(req.params.id, 10);
     const token = req.headers['x-authorization'] as string;
     const userDetails = await users.userByToken(token);
+
     if (token !== userDetails[0].auth_token) {
         res.status(403).send('Forbidden')
         return;
     }
-    const checkPetition = await petition.viewPetition(petitionId);
+
+    const checkPetition = await petition.petitionDetails(petitionId);
     if (checkPetition.length === 0 ) {
         res.status(404).send('Not Found')
         return;
     }
+    const checkSupporter = await petition.viewSupporters(petitionId)
+    if (checkSupporter.length !== 0) {
+        res.status(403).send()
+        return;
+    }
+
     try{
         const result = await petition.removePetition(petitionId)
         res.status(200).send();

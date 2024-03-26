@@ -2,6 +2,7 @@ import { getPool } from '../../config/db';
 import Logger from '../../config/logger';
 import { ResultSetHeader } from 'mysql2';
 
+
 const viewAllPetitions = async(searchTerm:string, supportingCost:number, supporterId: number, ownerId:number, sortTerm:string): Promise<any> => {
     Logger.info(`Getting all Petitions`);
     const conn = await getPool().getConnection();
@@ -13,15 +14,32 @@ const viewAllPetitions = async(searchTerm:string, supportingCost:number, support
     return result;
 };
 
-const viewPetition = async (id:number): Promise<any> => {
+const getSupportTier = async (petitionId:number): Promise<SupportTier[]> => {
+    Logger.info(`Retrieving supportTier with matching id`);
+    const conn = await getPool().getConnection();
+    const supportQuery = 'SELECT T.id as supportTierId, T.title as title, T.description as description, T.cost as cost from support_tier as T join petition as P on T.petition_id = P.id where P.id = ?'
+    const [ supportResult ] = await conn.query(supportQuery, [ petitionId ]);
+    await conn.release();
+    return supportResult;
+};
+const viewPetition = async (petitionId:number): Promise<CombinedPetition[]> => {
     Logger.info(`Retrieving petition with matching id`);
     const conn = await getPool().getConnection();
-    const query = 'SELECT P.id as petitionId, P.title as title, P.category_id as categoryId, P.owner_id as ownerId, U.first_name as ownerFirstName, U.last_name as ownerLastName, FROM petition as P join user as U on P.owner_id = U.id join supporter as S on P.id = S.petition_id';
-    const [ result ] = await conn.query( query, [ id ]);
+    const query = `SELECT P.id as petitionId, P.title as title, P.category_id as categoryId, P.owner_id as ownerId, U.first_name as ownerFirstName, U.last_name as ownerLastName, S.petition_id, count(*) as numberOfSupporters, P.creation_date as creationDate, P.description as description, sum(T.cost) as moneyRaised FROM petition as P join user as U on P.owner_id = U.id join supporter as S on P.id = S.petition_id join support_tier as T on P.id = T.petition_id WHERE P.id = ?`;
+    const [ result ] = await conn.query( query, [ petitionId ]);
     await conn.release();
     return result;
 };
 
+
+const petitionDetails = async (petitionId:number): Promise<any> => {
+    Logger.info(`Retrieving all petition details with matching id`);
+    const conn = await getPool().getConnection();
+    const query = 'select * from petition where id = ?';
+    const [ result ] = await conn.query( query, [ petitionId ]);
+    await conn.release();
+    return result;
+};
 const getCategory = async (): Promise<any> => {
     Logger.info(`Retrieving a list of all accepted categories`);
     const conn = await getPool().getConnection();
@@ -94,4 +112,4 @@ const updateSupportTier = async (title:string, description:string, cost:number, 
     return result;
 };
 
-export { viewAllPetitions, viewPetition, getCategory, addPetition, editPetition, removePetition, viewSupporters, addSupporter, addSupportTier, updateSupportTier }
+export { viewAllPetitions, getSupportTier, viewPetition, getCategory, addPetition, editPetition, petitionDetails, removePetition, viewSupporters, addSupporter, addSupportTier, updateSupportTier }

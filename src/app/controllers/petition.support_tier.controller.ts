@@ -22,7 +22,7 @@ const addSupportTier = async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
-    const checkPetition = await petition.viewPetition(petitionId);
+    const checkPetition = await petition.petitionDetails(petitionId);
     if (checkPetition.length === 0 ) {
         res.status(404).send('Not Found. No petition found with id')
         return;
@@ -61,20 +61,22 @@ const editSupportTier = async (req: Request, res: Response): Promise<void> => {
         res.status(400).send('Bad request')
         return;
     }
-    const userDetails = await users.userByToken(token);
-    if (token !== userDetails[0].auth_token) {
-        res.status(401).send('Unauthorized')
-        return;
-    }
 
-    const checkPetition = await petition.viewPetition(petitionId);
+    const userDetails = await users.userByToken(token);
+    Logger.info(userDetails)
+    // if (token !== userDetails[0].auth_token) {
+    //     res.status(401).send('Unauthorized')
+    //     return;
+    // }
+
+    const checkPetition = await petition.petitionDetails(petitionId);
     if (checkPetition.length === 0 ) {
         res.status(404).send('Not Found. No petition found with id')
         return;
     }
 
     const validation = await validate(
-        schemas.support_tier_post,
+        schemas.support_tier_patch,
         req.body);
     if (validation !== true) {
         res.status(400).send('Bad request.');
@@ -95,8 +97,36 @@ const editSupportTier = async (req: Request, res: Response): Promise<void> => {
 }
 
 const deleteSupportTier = async (req: Request, res: Response): Promise<void> => {
-    try{
+    const petitionId = parseInt(req.params.id,10);
+    const supportTierId = parseInt(req.params.tierId, 10);
+    const token = req.headers['x-authorization'] as string;
 
+    const userDetails = await users.userByToken(token);
+    if (token === undefined) {
+        res.status(401).send('Unauthorized')
+        return;
+    }
+    if (token !== userDetails[0].auth_token) {
+        res.status(401).send('Unauthorized')
+        return;
+    }
+    if(Number.isNaN(petitionId)) {
+        res.status(400).send('Bad request')
+        return;
+    }
+
+
+    const checkSupportTier = await petition.getSupportTier(petitionId)
+    const checkSupporter = await petition.viewSupporters(petitionId)
+    if (checkSupportTier.length === 0) {
+        res.status(404).send()
+        return;
+    }
+    if (checkSupporter.length === 0) {
+        res.status(404).send()
+        return;
+    }
+    try{
         res.status(200).send();
         return;
     } catch (err) {

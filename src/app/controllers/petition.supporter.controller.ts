@@ -8,7 +8,7 @@ import * as schemas from "../resources/schemas.json";
 
 const getAllSupportersForPetition = async (req: Request, res: Response): Promise<void> => {
     const petitionId = parseInt(req.params.id,10);
-    const checkPetition = await petition.viewPetition(petitionId);
+    const checkPetition = await petition.petitionDetails(petitionId);
     if (checkPetition.length === 0 ) {
         res.status(404).send('Not Found. No petittion with id')
         return;
@@ -37,7 +37,7 @@ const addSupporter = async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
-    const checkPetition = await petition.viewPetition(petitionId);
+    const checkPetition = await petition.petitionDetails(petitionId);
     if (checkPetition.length === 0 ) {
         res.status(404).send('Not Found. No petition found with id')
         return;
