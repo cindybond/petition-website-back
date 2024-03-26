@@ -13,7 +13,7 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
     let startIndex = parseInt(req.query.startIndex as string,10);
     const count = parseInt(req.query.count as string,10);
     const q = req.query.q as string;
-    const categoryIds = req.query.categoryIds as string[];
+    const categoryId = req.query.categoryIds as string[];
     let supportingCost = parseInt(req.query.supportingCost as string,10);
     let ownerId = parseInt(req.query.ownerId as string, 10);
     let supporterId = parseInt(req.query.supporterId as string, 10);
@@ -22,6 +22,7 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
     let searchTerm = null;
     let sortTerm;
 
+    Logger.info(categoryId)
     if (q === '') {
         res.status(400).send('Bad request');
         return;
@@ -57,7 +58,7 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
     }
 
     try{
-        const result = await petition.viewAllPetitions(searchTerm, supportingCost, supporterId, ownerId, sortTerm);
+        const result = await petition.viewAllPetitions(searchTerm, supportingCost, supporterId, ownerId, sortTerm, categoryId);
         if (Number.isNaN(startIndex)) {
             startIndex = 0;
             endIndex = result.length;

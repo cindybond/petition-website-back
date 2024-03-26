@@ -27,6 +27,12 @@ const addSupportTier = async (req: Request, res: Response): Promise<void> => {
         res.status(404).send('Not Found. No petition found with id')
         return;
     }
+    const checkSupportTier = await petition.getSupportTier(petitionId)
+    Logger.http(checkSupportTier)
+    if (checkSupportTier.length > 2) {
+        res.status(403).send('Forbidden')
+        return;
+    }
 
     const validation = await validate(
         schemas.support_tier_post,
@@ -57,17 +63,17 @@ const editSupportTier = async (req: Request, res: Response): Promise<void> => {
     const cost = req.body.cost;
     const token = req.headers['x-authorization'] as string;
 
+
     if(Number.isNaN(petitionId)) {
         res.status(400).send('Bad request')
         return;
     }
 
     const userDetails = await users.userByToken(token);
-    Logger.info(userDetails)
-    // if (token !== userDetails[0].auth_token) {
-    //     res.status(401).send('Unauthorized')
-    //     return;
-    // }
+    if (token !== userDetails[0].auth_token) {
+        res.status(401).send('Unauthorized')
+        return;
+    }
 
     const checkPetition = await petition.petitionDetails(petitionId);
     if (checkPetition.length === 0 ) {
@@ -82,10 +88,15 @@ const editSupportTier = async (req: Request, res: Response): Promise<void> => {
         res.status(400).send('Bad request.');
         return;
     }
+    const checkSupporter = await petition.viewSupporters(petitionId)
+    Logger.info(checkSupporter)
+    if (checkSupporter.length !== 0 && checkSupporter[0].supportTierId === supportTierId) {
+        res.status(403).send()
+        return;
+    }
 
     try{
-        const updateSupportTier = await petition.updateSupportTier(title, description, cost, petitionId)
-        Logger.info(editSupportTier)
+        const result = await petition.updateSupportTier(title, description, cost, petitionId)
         res.status(200).send();
         return;
     } catch (err) {
@@ -115,15 +126,14 @@ const deleteSupportTier = async (req: Request, res: Response): Promise<void> => 
         return;
     }
 
-
     const checkSupportTier = await petition.getSupportTier(petitionId)
     const checkSupporter = await petition.viewSupporters(petitionId)
-    if (checkSupportTier.length === 0) {
+    if (checkSupportTier.length === 0 || checkSupportTier.length === 1) {
         res.status(404).send()
         return;
     }
-    if (checkSupporter.length === 0) {
-        res.status(404).send()
+    if (checkSupporter.length === 0 || checkSupporter[0].supportTierId === supportTierId) {
+        res.status(403).send()
         return;
     }
     try{

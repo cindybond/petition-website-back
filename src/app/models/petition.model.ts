@@ -3,12 +3,27 @@ import Logger from '../../config/logger';
 import { ResultSetHeader } from 'mysql2';
 
 
-const viewAllPetitions = async(searchTerm:string, supportingCost:number, supporterId: number, ownerId:number, sortTerm:string): Promise<any> => {
+const viewAllPetitions = async(searchTerm:string, supportingCost:number, supporterId: number, ownerId:number, sortTerm:string, categoryId: string[]): Promise<any> => {
     Logger.info(`Getting all Petitions`);
     const conn = await getPool().getConnection();
-    let query = 'SELECT P.id as petitionId, P.title as title , P.category_id as categoryId, P.owner_id as ownerId, U.first_name as ownerFirstName, U.last_name as ownerLastName, P.creation_date as creationDate, T.cost as supportingCost FROM petition as P join user as U on P.owner_id = U.id join support_tier as T on P.id = T.petition_id join supporter as S on P.id = S.petition_id WHERE ((ISNULL(?) or P.description like ? or P.title like ?)) AND (ISNULL(?) or T.cost <= ?) AND (ISNULL(?) or S.user_id = ?) AND(ISNULL(?) or P.owner_id = ?) GROUP BY P.id, P.title, P.category_id, P.owner_id, U.first_name, U.last_name, P.creation_date, P.description';
+    let categoryIds;
+    let categoryFilter;
+    Logger.info(categoryId)
+    if (categoryId === undefined) {
+        categoryFilter = ''
+    } else if (categoryId !== undefined && categoryId.length !== 1) {
+        categoryIds = categoryId.map(i => Number(i));
+        categoryFilter = `AND P.category_id IN (${categoryIds})`;
+    } else if (categoryId.length === 1) {
+        categoryFilter = `AND P.category_id = ${categoryId}`
+    }
 
+
+    Logger.http(categoryId)
+    Logger.http(categoryIds)
+    let query = 'SELECT P.id as petitionId, P.title as title , P.category_id as categoryId, P.owner_id as ownerId, U.first_name as ownerFirstName, U.last_name as ownerLastName, P.creation_date as creationDate, T.cost as supportingCost FROM petition as P join user as U on P.owner_id = U.id join support_tier as T on P.id = T.petition_id join supporter as S on P.id = S.petition_id WHERE ((ISNULL(?) or P.description like ? or P.title like ?)) AND (ISNULL(?) or T.cost <= ?) AND (ISNULL(?) or S.user_id = ?) AND(ISNULL(?) or P.owner_id = ?)' + `${categoryFilter}` + ' GROUP BY P.id';
     query += ` ${sortTerm}`;
+    Logger.info(query)
     const [ result ] = await conn.query( query, [ searchTerm, searchTerm, searchTerm, supportingCost,supportingCost, supporterId, supporterId, ownerId , ownerId ]);
     await conn.release();
     return result;
