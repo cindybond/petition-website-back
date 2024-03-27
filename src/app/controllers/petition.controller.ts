@@ -94,7 +94,7 @@ const getPetition = async (req: Request, res: Response): Promise<void> => {
         const result = await petition.viewPetition(petitionId)
         const supportTierResult = await petition.getSupportTier(petitionId)
         result[0].supportTiers = supportTierResult
-        res.status(200).send(result);
+        res.status(200).send(result[0]);
         return;
     } catch (err) {
         Logger.error(err);
