@@ -8,7 +8,7 @@ const viewAllPetitions = async(searchTerm:string, supportingCost:number, support
     const conn = await getPool().getConnection();
     let categoryIds;
     let categoryFilter;
-    Logger.info(categoryId)
+
     if (categoryId === undefined) {
         categoryFilter = ''
     } else if (categoryId !== undefined && categoryId.length !== 1) {
@@ -18,10 +18,8 @@ const viewAllPetitions = async(searchTerm:string, supportingCost:number, support
         categoryFilter = `AND P.category_id = ${categoryId}`
     }
 
-
-    Logger.http(categoryId)
-    Logger.http(categoryIds)
     let query = 'SELECT P.id as petitionId, P.title as title , P.category_id as categoryId, P.owner_id as ownerId, U.first_name as ownerFirstName, U.last_name as ownerLastName, P.creation_date as creationDate, T.cost as supportingCost FROM petition as P join user as U on P.owner_id = U.id join support_tier as T on P.id = T.petition_id join supporter as S on P.id = S.petition_id WHERE ((ISNULL(?) or P.description like ? or P.title like ?)) AND (ISNULL(?) or T.cost <= ?) AND (ISNULL(?) or S.user_id = ?) AND(ISNULL(?) or P.owner_id = ?)' + `${categoryFilter}` + ' GROUP BY P.id';
+
     query += ` ${sortTerm}`;
     Logger.info(query)
     const [ result ] = await conn.query( query, [ searchTerm, searchTerm, searchTerm, supportingCost,supportingCost, supporterId, supporterId, ownerId , ownerId ]);
@@ -63,7 +61,6 @@ const getCategory = async (): Promise<any> => {
     await conn.release();
     return result;
 };
-
 const addPetition = async (title: string, description:string, ownerId: number, categoryId:number): Promise<any> => {
     Logger.info(`Adding a petition`);
     const conn = await getPool().getConnection();
@@ -126,5 +123,6 @@ const updateSupportTier = async (title:string, description:string, cost:number, 
     await conn.release();
     return result;
 };
+
 
 export { viewAllPetitions, getSupportTier, viewPetition, getCategory, addPetition, editPetition, petitionDetails, removePetition, viewSupporters, addSupporter, addSupportTier, updateSupportTier }

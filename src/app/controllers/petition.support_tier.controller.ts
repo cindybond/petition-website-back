@@ -27,6 +27,7 @@ const addSupportTier = async (req: Request, res: Response): Promise<void> => {
         res.status(404).send('Not Found. No petition found with id')
         return;
     }
+
     const checkSupportTier = await petition.getSupportTier(petitionId)
     Logger.http(checkSupportTier)
     if (checkSupportTier.length > 2) {

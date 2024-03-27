@@ -74,4 +74,5 @@ const updateUser = async (password:string , id:number): Promise<any> => {
 
 
 
+
 export{ insert, insertToken, getUser, getUserId, userByToken, userLogout, userLogin, updateUser }

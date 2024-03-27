@@ -22,7 +22,6 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
     let searchTerm = null;
     let sortTerm;
 
-    Logger.info(categoryId)
     if (q === '') {
         res.status(400).send('Bad request');
         return;
@@ -30,16 +29,24 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
     if (q !== undefined)  {
         searchTerm = `%${q}%`;
     }
-
-    if (Number.isNaN(supportingCost)) {
-        supportingCost = null;
-    }
     if (Number.isNaN(supporterId)) {
         supporterId = null;
     }
+    const checkUser = await users.getUserId(supporterId)
+    Logger.info(checkUser)
+    Logger.info(typeof req.query.supporterId)
+    if (typeof req.query.supporterId === "string" && checkUser.length === 0) {
+        res.status(400).send()
+        return;
+    }
+    if (Number.isNaN(supportingCost)) {
+        supportingCost = null;
+    }
+
     if (Number.isNaN(ownerId)) {
         ownerId = null;
     }
+
     if (sortBy === 'ALPHABETICAL_ASC') {
         sortTerm = 'ORDER BY P.title ASC'
     } else if (sortBy === 'ALPHABETICAL_DESC') {
@@ -100,6 +107,7 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
     const title = req.body.title;
     const description = req.body.description;
     const categoryId = req.body.categoryId;
+    const catId = parseInt(req.body.categoryId,10);
 
     const token = req.headers['x-authorization'] as string;
 
@@ -114,6 +122,7 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
         return;
     }
     const ownerId = userDetails[0].id;
+
 
     const validation = await validate(
         schemas.petition_post,
@@ -220,7 +229,6 @@ const deletePetition = async (req: Request, res: Response): Promise<void> => {
 
 const getCategories = async(req: Request, res: Response): Promise<void> => {
     const result = await petition.getCategory();
-    Logger.info(result)
     try{
         res.status(200).send(result);
         return;
