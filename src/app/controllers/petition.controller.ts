@@ -9,7 +9,7 @@ import * as schemas from "../resources/schemas.json";
 
 
 const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
-    Logger.info('GET all petitions')
+    Logger.info('GET request all petitions')
     let startIndex = parseInt(req.query.startIndex as string,10);
     const count = parseInt(req.query.count as string,10);
     const q = req.query.q as string;
@@ -81,6 +81,7 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
 }
 
 const getPetition = async (req: Request, res: Response): Promise<void> => {
+    Logger.info('GET request a petition')
     const petitionId = parseInt(req.params.id,10);
     const check = await petition.petitionDetails(petitionId);
 
@@ -104,6 +105,7 @@ const getPetition = async (req: Request, res: Response): Promise<void> => {
 }
 
 const addPetition = async (req: Request, res: Response): Promise<void> => {
+    Logger.info('POST request to add a petition')
     const title = req.body.title;
     const description = req.body.description;
     const categoryId = req.body.categoryId;
@@ -145,11 +147,12 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
 }
 
 const editPetition = async (req: Request, res: Response): Promise<void> => {
+    Logger.info('PATCH request to edit a petition')
     const petitionId = parseInt(req.params.id, 10);
     const token = req.headers['x-authorization'] as string;
-    const title = req.body.title;
-    const description = req.body.description;
-    const categoryId = req.body.categoryId;
+    let title = req.body.title;
+    let description = req.body.description;
+    let categoryId = req.body.categoryId;
 
     const userDetails = await users.userByToken(token);
     if (token !== userDetails[0].auth_token) {
@@ -176,6 +179,7 @@ const editPetition = async (req: Request, res: Response): Promise<void> => {
         res.status(404).send('Not Found. No petition with id')
         return;
     }
+
     Logger.info(checkPetition)
     if (checkPetition[0].owner_id !== ownerId) {
         res.status(403).send('Forbidden')
@@ -183,6 +187,16 @@ const editPetition = async (req: Request, res: Response): Promise<void> => {
     }
 
     try{
+        if (description === undefined) {
+            description = checkPetition[0].description
+        }
+        if (title === undefined) {
+            title = checkPetition[0].title
+        }
+        if (categoryId === undefined) {
+            categoryId = checkPetition[0].category_id
+        }
+
         const result = await petition.editPetition(title, description, ownerId, categoryId, petitionId)
         res.status(200).send();
         return;
@@ -195,6 +209,7 @@ const editPetition = async (req: Request, res: Response): Promise<void> => {
 }
 
 const deletePetition = async (req: Request, res: Response): Promise<void> => {
+    Logger.info('DELETE request to delete a petition')
     const petitionId = parseInt(req.params.id, 10);
     const token = req.headers['x-authorization'] as string;
     const userDetails = await users.userByToken(token);
@@ -228,6 +243,7 @@ const deletePetition = async (req: Request, res: Response): Promise<void> => {
 }
 
 const getCategories = async(req: Request, res: Response): Promise<void> => {
+    Logger.info('GET request to get all categories')
     const result = await petition.getCategory();
     try{
         res.status(200).send(result);

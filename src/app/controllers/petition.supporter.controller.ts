@@ -7,6 +7,7 @@ import * as schemas from "../resources/schemas.json";
 
 
 const getAllSupportersForPetition = async (req: Request, res: Response): Promise<void> => {
+    Logger.info('GET request to get all supporters for a petition')
     const petitionId = parseInt(req.params.id,10);
     const checkPetition = await petition.petitionDetails(petitionId);
     if (checkPetition.length === 0 ) {
@@ -27,6 +28,7 @@ const getAllSupportersForPetition = async (req: Request, res: Response): Promise
 }
 
 const addSupporter = async (req: Request, res: Response): Promise<void> => {
+    Logger.info('POST request to add supporter')
     const supportTierId = req.body.supportTierId;
     const message = req.body.message;
     const token = req.headers['x-authorization'] as string;

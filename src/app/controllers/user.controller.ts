@@ -82,7 +82,6 @@ const logout = async (req: Request, res: Response): Promise<void> => {
     Logger.info('POST request to logout current user')
     const token = req.headers['x-authorization'];
     try{
-        // Your code goes here
         const result = await users.userLogout(token);
         res.status(200).send('User logged out');
         return;

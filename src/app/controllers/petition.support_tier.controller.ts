@@ -6,6 +6,7 @@ import validate from "../services/validator";
 import * as schemas from "../resources/schemas.json";
 
 const addSupportTier = async (req: Request, res: Response): Promise<void> => {
+    Logger.info('POST request to add a support tier')
     const title = req.body.title;
     const description = req.body.description;
     const cost = req.body.cost;
@@ -57,11 +58,12 @@ const addSupportTier = async (req: Request, res: Response): Promise<void> => {
 }
 
 const editSupportTier = async (req: Request, res: Response): Promise<void> => {
+    Logger.info('PATCH request to edit support tier')
     const petitionId = parseInt(req.params.id,10);
     const supportTierId = parseInt(req.params.tierId, 10);
-    const title = req.body.title;
-    const description = req.body.description;
-    const cost = req.body.cost;
+    let title = req.body.title;
+    let description = req.body.description;
+    let cost = req.body.cost;
     const token = req.headers['x-authorization'] as string;
 
 
@@ -95,10 +97,20 @@ const editSupportTier = async (req: Request, res: Response): Promise<void> => {
         res.status(403).send()
         return;
     }
-
+    const checkSupportTier = await petition.getSupportTier(petitionId)
+    Logger.info(checkSupportTier)
     try{
+        if (title === undefined) {
+            title = checkSupportTier[0].title
+        }
+        if (description === undefined) {
+            description = checkSupportTier[0].description
+        }
+        if (cost === undefined) {
+            cost = checkSupportTier[0].cost
+        }
         const result = await petition.updateSupportTier(title, description, cost, petitionId)
-        res.status(200).send();
+        res.status(200).send(result);
         return;
     } catch (err) {
         Logger.error(err);
@@ -109,6 +121,7 @@ const editSupportTier = async (req: Request, res: Response): Promise<void> => {
 }
 
 const deleteSupportTier = async (req: Request, res: Response): Promise<void> => {
+    Logger.info('DELETE request to delete support tier')
     const petitionId = parseInt(req.params.id,10);
     const supportTierId = parseInt(req.params.tierId, 10);
     const token = req.headers['x-authorization'] as string;

@@ -57,7 +57,7 @@ const userLogin = async(email: string, password: string) : Promise<any> => {
 const userLogout = async (token: string | string[]): Promise<any> => {
     Logger.info('Logging out current user');
     const conn = await getPool().getConnection();
-    const query = 'select id from user where auth_token = ?';
+    const query = 'update user set auth_token = null where auth_token = ?';
     const [ result ] = await conn.query( query, [ token ]);
     await conn.release();
     return result;

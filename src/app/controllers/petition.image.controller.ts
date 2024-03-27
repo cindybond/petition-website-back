@@ -7,6 +7,7 @@ import * as petition from '../models/petition.model'
 import * as users from "../models/user.model";
 
 const getImage = async (req: Request, res: Response): Promise<void> => {
+    Logger.info('GET request to get petition image')
     const petitionId = parseInt(req.params.id, 10);
 
     const checkId = await petition.petitionDetails(petitionId);
@@ -41,6 +42,7 @@ const getImage = async (req: Request, res: Response): Promise<void> => {
 }
 
 const setImage = async (req: Request, res: Response): Promise<void> => {
+    Logger.info('POST request to set petition image')
     const petitionId = parseInt(req.params.id, 10);
     const token = req.headers['x-authorization'] as string;
     const body = req.body;
