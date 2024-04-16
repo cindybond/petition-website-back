@@ -81,16 +81,17 @@ const getAllPetitions = async (req: Request, res: Response): Promise<void> => {
 }
 
 const getPetition = async (req: Request, res: Response): Promise<void> => {
-    Logger.info('GET request a petition')
-    const petitionId = parseInt(req.params.id,10);
-    const check = await petition.petitionDetails(petitionId);
-
-    if (check.length === 0){
-        res.status(404).send('Not Found')
-        return;
-    }
-
     try{
+        Logger.info('GET request a petition')
+        const petitionId = parseInt(req.params.id,10);
+        const check = await petition.petitionDetails(petitionId);
+
+        if (check.length === 0){
+            res.status(404).send('Not Found')
+            return;
+        }
+
+
         const result = await petition.viewPetition(petitionId)
         const supportTierResult = await petition.getSupportTier(petitionId)
         result[0].supportTiers = supportTierResult
@@ -147,46 +148,47 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
 }
 
 const editPetition = async (req: Request, res: Response): Promise<void> => {
-    Logger.info('PATCH request to edit a petition')
-    const petitionId = parseInt(req.params.id, 10);
-    const token = req.headers['x-authorization'] as string;
-    let title = req.body.title;
-    let description = req.body.description;
-    let categoryId = req.body.categoryId;
-
-    const userDetails = await users.userByToken(token);
-    if (token !== userDetails[0].auth_token) {
-        res.status(403).send('Forbidden')
-        return;
-    }
-
-    const ownerId = userDetails[0].id;
-    const validation = await validate(
-        schemas.petition_patch,
-        req.body);
-    if (validation !== true) {
-        res.status(400).send('Bad request.');
-        return;
-    }
-
-    if(Number.isNaN(petitionId)) {
-        res.status(400).send('Bad request')
-        return;
-    }
-
-    const checkPetition = await petition.petitionDetails(petitionId);
-    if (checkPetition.length === 0 ) {
-        res.status(404).send('Not Found. No petition with id')
-        return;
-    }
-
-    Logger.info(checkPetition)
-    if (checkPetition[0].owner_id !== ownerId) {
-        res.status(403).send('Forbidden')
-        return;
-    }
-
     try{
+        Logger.info('PATCH request to edit a petition')
+        const petitionId = parseInt(req.params.id, 10);
+        const token = req.headers['x-authorization'] as string;
+        let title = req.body.title;
+        let description = req.body.description;
+        let categoryId = req.body.categoryId;
+
+        const userDetails = await users.userByToken(token);
+        if (token !== userDetails[0].auth_token) {
+            res.status(403).send('Forbidden')
+            return;
+        }
+
+        const ownerId = userDetails[0].id;
+        const validation = await validate(
+            schemas.petition_patch,
+            req.body);
+        if (validation !== true) {
+            res.status(400).send('Bad request.');
+            return;
+        }
+
+        if(Number.isNaN(petitionId)) {
+            res.status(400).send('Bad request')
+            return;
+        }
+
+        const checkPetition = await petition.petitionDetails(petitionId);
+        if (checkPetition.length === 0 ) {
+            res.status(404).send('Not Found. No petition with id')
+            return;
+        }
+
+        Logger.info(checkPetition)
+        if (checkPetition[0].owner_id !== ownerId) {
+            res.status(403).send('Forbidden')
+            return;
+        }
+
+
         if (description === undefined) {
             description = checkPetition[0].description
         }
@@ -209,28 +211,29 @@ const editPetition = async (req: Request, res: Response): Promise<void> => {
 }
 
 const deletePetition = async (req: Request, res: Response): Promise<void> => {
-    Logger.info('DELETE request to delete a petition')
-    const petitionId = parseInt(req.params.id, 10);
-    const token = req.headers['x-authorization'] as string;
-    const userDetails = await users.userByToken(token);
-
-    if (token !== userDetails[0].auth_token) {
-        res.status(403).send('Forbidden')
-        return;
-    }
-
-    const checkPetition = await petition.petitionDetails(petitionId);
-    if (checkPetition.length === 0 ) {
-        res.status(404).send('Not Found')
-        return;
-    }
-    const checkSupporter = await petition.viewSupporters(petitionId)
-    if (checkSupporter.length !== 0) {
-        res.status(403).send()
-        return;
-    }
-
     try{
+        Logger.info('DELETE request to delete a petition')
+        const petitionId = parseInt(req.params.id, 10);
+        const token = req.headers['x-authorization'] as string;
+        const userDetails = await users.userByToken(token);
+
+        if (token !== userDetails[0].auth_token) {
+            res.status(403).send('Forbidden')
+            return;
+        }
+
+        const checkPetition = await petition.petitionDetails(petitionId);
+        if (checkPetition.length === 0 ) {
+            res.status(404).send('Not Found')
+            return;
+        }
+        const checkSupporter = await petition.viewSupporters(petitionId)
+        if (checkSupporter.length !== 0) {
+            res.status(403).send()
+            return;
+        }
+
+
         const result = await petition.removePetition(petitionId)
         res.status(200).send();
         return;

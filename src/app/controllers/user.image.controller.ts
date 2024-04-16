@@ -7,21 +7,22 @@ import * as image from '../models/user.image.model';
 
 
 const getImage = async (req: Request, res: Response): Promise<void> => {
-    Logger.http('GET request to retrieve user profile image')
-    const id = parseInt(req.params.id, 10);
-
-    const checkId = await users.getUserId(id);
-    if (checkId.length === 0) {
-        res.status(404).send('Not Found. No user with specified ID, or user has no image')
-        return;
-    }
-    const photo = await image.getPhoto(id);
-    if (photo[0].image_filename === null) {
-        res.status(404).send('Not Found. No user with specified ID, or user has no image')
-        return;
-    }
-
     try{
+        Logger.http('GET request to retrieve user profile image')
+        const id = parseInt(req.params.id, 10);
+
+        const checkId = await users.getUserId(id);
+        if (checkId.length === 0) {
+            res.status(404).send('Not Found. No user with specified ID, or user has no image')
+            return;
+        }
+        const photo = await image.getPhoto(id);
+        if (photo[0].image_filename === null) {
+            res.status(404).send('Not Found. No user with specified ID, or user has no image')
+            return;
+        }
+
+
         const filename = photo[0].image_filename;
         const filePath = path.join(__dirname, '..' , '..', '..', 'storage', 'images', filename)
         const data = fs.readFileSync(filePath);
