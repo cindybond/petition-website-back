@@ -109,7 +109,7 @@ const addPetition = async (req: Request, res: Response): Promise<void> => {
     Logger.info('POST request to add a petition')
     const title = req.body.title;
     const description = req.body.description;
-    const categoryId = req.body.categoryId;
+    const categoryId = parseInt(req.body.categoryId,10);
     const catId = parseInt(req.body.categoryId,10);
 
     const token = req.headers['x-authorization'] as string;

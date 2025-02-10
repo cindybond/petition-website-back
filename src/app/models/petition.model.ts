@@ -18,7 +18,7 @@ const viewAllPetitions = async(searchTerm:string, supportingCost:number, support
         categoryFilter = `AND P.category_id = ${categoryId}`
     }
 
-    let query = 'SELECT P.id as petitionId, P.title as title , P.category_id as categoryId, P.owner_id as ownerId, U.first_name as ownerFirstName, U.last_name as ownerLastName, P.creation_date as creationDate, T.cost as supportingCost FROM petition as P join user as U on P.owner_id = U.id join support_tier as T on P.id = T.petition_id join supporter as S on P.id = S.petition_id WHERE ((ISNULL(?) or P.description like ? or P.title like ?)) AND (ISNULL(?) or T.cost <= ?) AND (ISNULL(?) or S.user_id = ?) AND(ISNULL(?) or P.owner_id = ?)' + `${categoryFilter}` + ' GROUP BY P.id';
+    let query = 'SELECT P.id as petitionId, P.title as title , P.category_id as categoryId, P.owner_id as ownerId, U.first_name as ownerFirstName, U.last_name as ownerLastName, P.creation_date as creationDate, MIN(T.cost) as supportingCost FROM petition as P join user as U on P.owner_id = U.id join support_tier as T on P.id = T.petition_id join supporter as S on P.id = S.petition_id WHERE ((ISNULL(?) or P.description like ? or P.title like ?)) AND (ISNULL(?) or T.cost <= ?) AND (ISNULL(?) or S.user_id = ?) AND(ISNULL(?) or P.owner_id = ?)' + `${categoryFilter}` + ' GROUP BY P.id, P.title, P.category_id, P.owner_id, U.first_name, U.last_name, P.creation_date';
 
     query += ` ${sortTerm}`;
     Logger.info(query)
